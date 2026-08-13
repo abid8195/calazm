@@ -2,8 +2,11 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
 import { setSession } from "@/lib/session";
 import { json } from "@/lib/api";
+import { rateLimit, clientIp } from "@/lib/ratelimit";
 
 export async function POST(req: Request) {
+  const rl = rateLimit(`signup:${clientIp(req)}`, 5, 60_000);
+  if (!rl.ok) return json({ error: `Too many attempts — try again in ${rl.retryAfterS}s.` }, 429);
   const { email, password, name } = await req.json();
   if (!email || !password || password.length < 8) {
     return json({ error: "Email and a password of at least 8 characters are required." }, 400);

@@ -235,6 +235,16 @@ model Subscription {
   updatedAt DateTime @updatedAt
 }
 
+// Global cache of vision analyses keyed by image content hash — a duplicate or
+// re-scanned photo never bills a second model call (and never spends a free scan).
+model AIAnalysisCache {
+  id             String   @id @default(cuid())
+  imageHash      String   @unique
+  detectionsJson String
+  provider       String
+  createdAt      DateTime @default(now())
+}
+
 model AIUsage {
   id        String   @id @default(cuid())
   userId    String

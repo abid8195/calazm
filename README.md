@@ -64,7 +64,8 @@ SQLite needs a persistent disk, so use a host with volumes (Railway, Fly.io, Ren
 - [ ] `SESSION_SECRET` set to a strong random value (sessions are HMAC-signed with it)
 - [ ] **Monetization:** replace the checkout stub in `app/api/subscriptions/route.ts` with Stripe — create a $2.99/mo + $24.99/yr Price, redirect to Stripe Checkout, set `plan: "plus"` in the `checkout.session.completed` webhook. The plan gating (scan metering) already works off the `Subscription` table.
 - [ ] Object storage for meal images (Option B only)
-- [ ] Rate limiting on `/api/auth/*` and `/api/meals/analyze-image` (e.g. Upstash)
+- [x] Rate limiting on `/api/auth/*` and `/api/meals/analyze-image` — built in (`lib/ratelimit.ts`, in-memory sliding window; swap for Upstash Redis if you run multiple instances)
+- [x] Vision-result caching by image hash (`AIAnalysisCache`) — duplicate photos never bill a second model call or spend a free scan
 - [ ] Privacy policy + account data export/delete endpoints before public launch
 
 ## Stack

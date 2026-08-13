@@ -53,8 +53,9 @@ export async function POST(req: Request) {
   } else {
     const mediaType = file.type || "image/jpeg";
     detections = await getAI().analyzeMealImage(buffer.toString("base64"), mediaType, hint ?? file.name);
-    await prisma.aIUsage.update({ where: { id: usage.id }, data: { count: { increment: 1 } } });
     if (detections.length > 0) {
+      // Only successful analyses spend a free scan — a photo we couldn't read costs the user nothing.
+      await prisma.aIUsage.update({ where: { id: usage.id }, data: { count: { increment: 1 } } });
       await prisma.aIAnalysisCache.upsert({
         where: { imageHash },
         create: { imageHash, detectionsJson: JSON.stringify(detections), provider: getAI().name },
@@ -81,8 +82,10 @@ export async function POST(req: Request) {
     });
   }
 
-  const scansUsed = cached ? usage.count : usage.count + 1;
+  const spentScan = !cached && detections.length > 0;
+  const scansUsed = usage.count + (spentScan ? 1 : 0);
   const range = kcalRange(items);
+  const isLocalProvider = getAI().name === "local";
   return json({
     items,
     imagePath: `/uploads/${filename}`,
@@ -92,7 +95,12 @@ export async function POST(req: Request) {
     cached: !!cached,
     clarify: items.some((i) => i.hiddenFatRisk) ? "Was this cooked with much oil or butter?" : null,
     // Honest degradation: if we couldn't identify anything, guide the user to describe it
-    fallback: items.length === 0 ? "I couldn't confidently identify the food in this photo. Describe it in a few words and I'll take it from there." : null,
+    fallback:
+      items.length === 0
+        ? isLocalProvider
+          ? "Photo recognition isn't set up on this server yet (it needs an AI vision key — see the README). Describe the meal below and I'll analyze it instantly. This failed scan didn't use your quota."
+          : "I couldn't confidently identify the food in this photo. Describe it in a few words below and I'll take it from there. This scan didn't use your quota."
+        : null,
     scansLeft: isFree ? Math.max(FREE_SCANS_PER_MONTH - scansUsed, 0) : null,
   });
 }

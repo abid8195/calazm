@@ -45,6 +45,7 @@ export default function LogPage() {
   const [saved, setSaved] = useState<{ id: string; name: string; kcal: number; proteinG: number; timesUsed: number }[]>([]);
   const [search, setSearch] = useState("");
   const [hits, setHits] = useState<FoodHit[]>([]);
+  const [describe, setDescribe] = useState("");
 
   useEffect(() => {
     fetch("/api/saved-meals")
@@ -112,6 +113,28 @@ export default function LogPage() {
       body: JSON.stringify({ items: data.items, name: data.name, source: "saved" }),
     });
     router.push("/today");
+  }
+
+  // Photo couldn't be identified → user describes it; text analysis fills the same review card,
+  // keeping the photo attached to the meal.
+  async function describeMeal() {
+    if (!describe.trim() || !analysis) return;
+    setBusy("describe");
+    const res = await fetch("/api/meals/analyze-text", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: describe }),
+    });
+    setBusy(null);
+    const data = await res.json();
+    if (!res.ok || data.items.length === 0) {
+      setError(data.error ?? 'I couldn\'t match that either — try simpler words like "eggs and toast".');
+      return;
+    }
+    setError("");
+    setAnalysis({ ...data, imagePath: analysis.imagePath, scansLeft: analysis.scansLeft, fallback: null });
+    setOriginal(JSON.parse(JSON.stringify(data.items)));
+    setDescribe("");
   }
 
   function setGrams(idx: number, grams: number) {
@@ -316,9 +339,28 @@ export default function LogPage() {
             </div>
 
             {analysis.fallback && (
-              <p className="text-sm mt-3 leading-relaxed" style={{ color: "var(--muted)" }}>
-                {analysis.fallback}
-              </p>
+              <div className="mt-3">
+                <p className="text-sm leading-relaxed" style={{ color: "var(--muted)" }}>
+                  {analysis.fallback}
+                </p>
+                <div className="flex gap-2 mt-3">
+                  <input
+                    className="input flex-1 text-sm"
+                    placeholder="e.g. two eggs and a slice of toast"
+                    value={describe}
+                    onChange={(e) => setDescribe(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), describeMeal())}
+                  />
+                  <button className="btn btn-brand text-sm shrink-0" onClick={describeMeal} disabled={busy === "describe" || !describe.trim()}>
+                    {busy === "describe" ? "…" : "Analyze"}
+                  </button>
+                </div>
+                {error && (
+                  <p className="text-xs mt-2" style={{ color: "var(--carbs)" }}>
+                    {error}
+                  </p>
+                )}
+              </div>
             )}
             {analysis.note && (
               <p className="text-xs mt-2" style={{ color: "var(--brand)" }}>
@@ -357,7 +399,7 @@ export default function LogPage() {
             </div>
 
             {/* add more items */}
-            <div className="relative mt-4">
+            <div className="relative mt-4" hidden={!!analysis.fallback}>
               <input className="input text-sm" placeholder="Add another food…" value={search} onChange={(e) => setSearch(e.target.value)} />
               {hits.length > 0 && (
                 <div className="absolute z-10 inset-x-0 top-full mt-1 card p-1 max-h-56 overflow-auto">
@@ -408,27 +450,33 @@ export default function LogPage() {
               </div>
             )}
 
-            <div className="flex gap-2 mt-4 flex-wrap">
-              {["breakfast", "lunch", "dinner", "snack"].map((t) => (
-                <button key={t} className={`chip capitalize ${mealType === t ? "active" : ""}`} onClick={() => setMealType(t)}>
-                  {t}
-                </button>
-              ))}
-            </div>
+            {analysis.items.length > 0 && (
+              <>
+                <div className="flex gap-2 mt-4 flex-wrap">
+                  {["breakfast", "lunch", "dinner", "snack"].map((t) => (
+                    <button key={t} className={`chip capitalize ${mealType === t ? "active" : ""}`} onClick={() => setMealType(t)}>
+                      {t}
+                    </button>
+                  ))}
+                </div>
 
-            <label className="flex items-center gap-2 mt-4 text-sm">
-              <input type="checkbox" checked={wantSave} onChange={(e) => setWantSave(e.target.checked)} />
-              Save as a one-tap meal
-            </label>
-            {wantSave && <input className="input mt-2 text-sm" placeholder="Name it (e.g. My usual breakfast)" value={saveAs} onChange={(e) => setSaveAs(e.target.value)} />}
+                <label className="flex items-center gap-2 mt-4 text-sm">
+                  <input type="checkbox" checked={wantSave} onChange={(e) => setWantSave(e.target.checked)} />
+                  Save as a one-tap meal
+                </label>
+                {wantSave && <input className="input mt-2 text-sm" placeholder="Name it (e.g. My usual breakfast)" value={saveAs} onChange={(e) => setSaveAs(e.target.value)} />}
+              </>
+            )}
 
             <div className="flex gap-2 mt-5">
-              <button className="btn btn-ghost flex-1" onClick={() => { setAnalysis(null); setError(""); setClarifyAnswered(null); }}>
+              <button className="btn btn-ghost flex-1" onClick={() => { setAnalysis(null); setError(""); setClarifyAnswered(null); setDescribe(""); }}>
                 Start over
               </button>
-              <button className="btn btn-brand flex-1" onClick={confirm} disabled={busy === "confirm" || analysis.items.length === 0}>
-                {busy === "confirm" ? "Logging…" : "Looks right — log it"}
-              </button>
+              {analysis.items.length > 0 && (
+                <button className="btn btn-brand flex-1" onClick={confirm} disabled={busy === "confirm"}>
+                  {busy === "confirm" ? "Logging…" : "Looks right — log it"}
+                </button>
+              )}
             </div>
             {analysis.scansLeft !== null && analysis.scansLeft !== undefined && (
               <p className="text-xs mt-3 text-center" style={{ color: "var(--muted)" }}>

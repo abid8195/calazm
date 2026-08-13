@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Nav from "@/components/Nav";
+import AdSlot from "@/components/AdSlot";
 
 type Weekly = {
   weekStart: string;
@@ -321,6 +322,8 @@ export default function InsightsPage() {
           </div>
         )}
       </section>
+
+      <AdSlot placement="insights-bottom" />
 
       {s.topFoods.length > 0 && (
         <section className="card p-5 mt-4">

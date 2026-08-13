@@ -4,7 +4,9 @@
 
 Calazm is an AI calorie & nutrition tracker that doesn't stop at logging — it learns your habits (meals, portions, routines) and helps you decide **what to eat next**. Built with Next.js 15, TypeScript, Prisma and Tailwind.
 
-**Product docs:** [docs/01-product-strategy.md](docs/01-product-strategy.md) · [docs/02-experience.md](docs/02-experience.md) · [docs/03-architecture.md](docs/03-architecture.md)
+**Product docs:** [strategy](docs/01-product-strategy.md) · [experience](docs/02-experience.md) · [architecture](docs/03-architecture.md) · [mobile release playbook](docs/04-mobile-release.md) · [case study](docs/05-case-study.md)
+
+Also included: installable **PWA** (manifest + service worker), **Capacitor** config for App Store/Play Store builds, free-tier **ad slots** (AdSense-ready, Plus removes ads), founder **/admin** metrics dashboard (users, conversion, MRR, AI cost — gate with `ADMIN_EMAIL`), `/privacy` policy page, and GDPR-style **data export + in-app account deletion** (store requirements).
 
 ## Features (MVP)
 

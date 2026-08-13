@@ -4,6 +4,8 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Calazm — Your AI nutrition companion",
   description: "Snap it. Ask it. Eat better. Calazm learns your habits and helps you decide what to eat next.",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: { capable: true, title: "Calazm", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {
@@ -19,6 +21,9 @@ try {
     document.documentElement.classList.add('dark');
   }
 } catch (e) {}
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () { navigator.serviceWorker.register('/sw.js'); });
+}
 `;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -1,0 +1,17 @@
+{
+  "name": "Calazm — AI Nutrition Companion",
+  "short_name": "Calazm",
+  "description": "Snap it. Ask it. Eat better. AI calorie tracking that learns your habits and helps you decide what to eat next.",
+  "id": "app.calazm",
+  "start_url": "/today",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FAF9F6",
+  "theme_color": "#1E7A5A",
+  "categories": ["health", "fitness", "food"],
+  "icons": [
+    { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/icons/maskable.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}

@@ -195,6 +195,45 @@ export default function ProfilePage() {
         </div>
       </section>
 
+      {/* Your data */}
+      <section className="card p-5 mt-4 grid gap-3">
+        <h3 className="text-sm font-semibold">Your data</h3>
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-sm font-medium">Export everything</div>
+            <div className="text-xs" style={{ color: "var(--muted)" }}>
+              Download all your data as JSON
+            </div>
+          </div>
+          <a className="chip" href="/api/export" download>
+            Export
+          </a>
+        </div>
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-sm font-medium">Delete account</div>
+            <div className="text-xs" style={{ color: "var(--muted)" }}>
+              Permanent — removes all meals, photos and history
+            </div>
+          </div>
+          <button
+            className="chip"
+            style={{ color: "var(--carbs)", borderColor: "var(--carbs)" }}
+            onClick={async () => {
+              if (!confirm("Delete your Calazm account and ALL data permanently? This cannot be undone.")) return;
+              if (!confirm("Last check — this erases every meal, photo and trend. Continue?")) return;
+              await fetch("/api/account", { method: "DELETE" });
+              router.push("/");
+            }}
+          >
+            Delete
+          </button>
+        </div>
+        <p className="text-xs" style={{ color: "var(--muted)" }}>
+          <a href="/privacy" className="underline">Privacy policy</a>
+        </p>
+      </section>
+
       <p className="text-xs mt-6 leading-relaxed text-center" style={{ color: "var(--muted)" }}>
         Calazm is a nutrition companion, not a medical device. Estimates are estimates. If tracking ever feels compulsive or stressful,
         stepping back is a valid choice — and talking to a health professional is always a good one.

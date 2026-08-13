@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Nav from "@/components/Nav";
 import Ring from "@/components/Ring";
 import MacroBar from "@/components/MacroBar";
+import AdSlot from "@/components/AdSlot";
 
 type Today = {
   target: { calories: number; proteinG: number; carbsG: number; fatG: number; fibreG: number; waterMl: number };
@@ -151,6 +152,8 @@ export default function TodayPage() {
           </p>
         )}
       </section>
+
+      <AdSlot placement="today-mid" />
 
       {/* Meals */}
       <section className="mt-6">

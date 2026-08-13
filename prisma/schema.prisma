@@ -1,0 +1,247 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+// SQLite for local prototype; schema is Postgres-compatible — swap provider + DATABASE_URL for production.
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  profile         Profile?
+  targets         NutritionTarget[]
+  meals           Meal[]
+  savedMeals      SavedMeal[]
+  weights         WeightEntry[]
+  water           WaterEntry[]
+  memories        UserMemory[]
+  corrections     FoodCorrection[]
+  recommendations Recommendation[]
+  insights        WeeklyInsight[]
+  subscription    Subscription?
+  aiUsage         AIUsage[]
+  customFoods     Food[]
+}
+
+model Profile {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  goal          String // lose | maintain | gain | muscle | habits
+  sex           String? // male | female | unspecified
+  age           Int?
+  heightCm      Float?
+  weightKg      Float?
+  targetWeightKg Float?
+  activityLevel String   @default("moderate") // sedentary|light|moderate|active|athlete
+  paceKgPerWeek Float    @default(0.5)
+  dietaryPref   String   @default("none") // none|vegetarian|vegan|pescatarian|halal
+  proteinFocus  Boolean  @default(true)
+  mealSchedule  String   @default("3+1") // e.g. "3", "3+1", "2"
+  onboarded     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model NutritionTarget {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  calories   Int
+  proteinG   Int
+  carbsG     Int
+  fatG       Int
+  fibreG     Int      @default(28)
+  waterMl    Int      @default(2000)
+  source     String   @default("formula") // formula | adaptive | manual
+  rationale  String? // human-readable explanation
+  active     Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  @@index([userId, active])
+}
+
+model Food {
+  id          String  @id @default(cuid())
+  name        String
+  aliases     String  @default("") // pipe-separated lowercase aliases
+  category    String  @default("general")
+  source      String  @default("curated") // curated | usda | off | user
+  verified    Boolean @default(true)
+  per100Kcal  Float
+  per100Protein Float
+  per100Carbs Float
+  per100Fat   Float
+  per100Fibre Float   @default(0)
+  servingName String  @default("serving") // e.g. "1 egg", "1 bowl"
+  servingG    Float   @default(100)
+  hiddenFatRisk Boolean @default(false) // widens uncertainty range (oil, dressings, curries)
+  createdById String?
+  createdBy   User?   @relation(fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+  mealItems   MealItem[]
+
+  @@index([name])
+}
+
+model Meal {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name       String
+  mealType   String // breakfast | lunch | dinner | snack
+  eatenAt    DateTime  @default(now())
+  source     String    @default("text") // photo | text | saved | manual
+  imagePath  String?
+  confidence Float? // 0..1 overall analysis confidence
+  kcalLow    Float? // uncertainty range
+  kcalHigh   Float?
+  notes      String?
+  deletedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  items      MealItem[]
+
+  @@index([userId, eatenAt])
+}
+
+model MealItem {
+  id        String  @id @default(cuid())
+  mealId    String
+  meal      Meal    @relation(fields: [mealId], references: [id], onDelete: Cascade)
+  foodId    String?
+  food      Food?   @relation(fields: [foodId], references: [id])
+  label     String // as detected/entered
+  grams     Float
+  kcal      Float
+  proteinG  Float
+  carbsG    Float
+  fatG      Float
+  fibreG    Float   @default(0)
+  confidence Float  @default(1)
+}
+
+model SavedMeal {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  mealType  String   @default("any")
+  itemsJson String // serialized items [{label, foodId, grams, kcal, proteinG, carbsG, fatG, fibreG}]
+  kcal      Float
+  proteinG  Float
+  carbsG    Float
+  fatG      Float
+  fibreG    Float    @default(0)
+  timesUsed Int      @default(0)
+  lastUsed  DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model WeightEntry {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  weightKg  Float
+  date      DateTime
+  createdAt DateTime @default(now())
+
+  @@unique([userId, date])
+  @@index([userId, date])
+}
+
+model WaterEntry {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ml        Int
+  date      DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId, date])
+}
+
+model UserMemory {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind      String // usual_breakfast | usual_lunch | usual_dinner | frequent_food | typical_portion | pattern
+  key       String // e.g. food name or pattern id
+  valueJson String // structured payload
+  strength  Float    @default(1) // occurrences / confidence in this memory
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+
+  @@unique([userId, kind, key])
+  @@index([userId, kind])
+}
+
+model FoodCorrection {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  originalLabel String
+  originalGrams Float
+  correctedLabel String
+  correctedGrams Float
+  context       String   @default("") // mealType or source
+  createdAt     DateTime @default(now())
+
+  @@index([userId, correctedLabel])
+}
+
+model Recommendation {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  payload   String // serialized suggestion
+  reason    String
+  accepted  Boolean?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model WeeklyInsight {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  weekStart DateTime
+  dataJson  String // computed stats
+  narrative String // generated summary
+  createdAt DateTime @default(now())
+
+  @@unique([userId, weekStart])
+}
+
+model Subscription {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan      String   @default("free") // free | plus
+  status    String   @default("active")
+  renewsAt  DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AIUsage {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind      String // photo_scan | text_parse | weekly_insight
+  month     String // "2026-08"
+  count     Int      @default(0)
+
+  @@unique([userId, kind, month])
+}

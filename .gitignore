@@ -1,0 +1,7 @@
+node_modules/
+.next/
+uploads/
+*.db
+*.db-journal
+.env
+next-env.d.ts

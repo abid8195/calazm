@@ -15,7 +15,7 @@ export interface AIProvider {
   generateWeeklyNarrative(stats: Record<string, unknown>): Promise<string | null>;
 }
 
-class LocalProvider implements AIProvider {
+export class LocalProvider implements AIProvider {
   name = "local";
 
   async analyzeMealImage(_img: string, _mt: string, hint?: string): Promise<VisionDetection[]> {
@@ -39,12 +39,12 @@ class LocalProvider implements AIProvider {
     return resolveText(text, portionOverrides);
   }
 
-  async generateWeeklyNarrative(): Promise<string | null> {
+  async generateWeeklyNarrative(_stats?: Record<string, unknown>): Promise<string | null> {
     return null; // caller falls back to template narrative
   }
 }
 
-class AnthropicProvider implements AIProvider {
+export class AnthropicProvider implements AIProvider {
   name = "anthropic";
   private local = new LocalProvider();
 

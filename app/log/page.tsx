@@ -54,8 +54,8 @@ export default function LogPage() {
   }, [router]);
 
   useEffect(() => {
-    if (search.length < 2) return setHits([]);
     const t = setTimeout(async () => {
+      if (search.length < 2) return setHits([]);
       const r = await fetch(`/api/foods/search?q=${encodeURIComponent(search)}`);
       if (r.ok) setHits((await r.json()).foods);
     }, 200);

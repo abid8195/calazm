@@ -6,7 +6,6 @@
 // - In the Capacitor native build, replace this with AdMob banners (see docs/04-mobile-release.md).
 // Ads are always labeled, never interstitial, and never interrupt logging flows.
 import { useEffect, useState } from "react";
-import Link from "next/link";
 
 const ADSENSE_ID = process.env.NEXT_PUBLIC_ADSENSE_ID;
 
@@ -60,15 +59,17 @@ export default function AdSlot({ placement }: { placement: string }) {
           data-full-width-responsive="true"
         />
       ) : (
-        <Link href="/profile" className="card p-4 flex items-center justify-between gap-3 hover:opacity-90" style={{ borderStyle: "dashed" }}>
+        <div className="card p-4 flex items-center justify-between gap-3" style={{ borderStyle: "dashed" }}>
           <div>
-            <div className="text-sm font-semibold">Tired of ads? Calazm Plus is $2.99/mo.</div>
+            <div className="text-sm font-semibold">Calazm Plus is coming soon.</div>
             <div className="text-xs mt-0.5" style={{ color: "var(--muted)" }}>
-              No ads, unlimited AI scans, full insights. Cancel any time.
+              No ads, unlimited AI scans, full insights — planned at $2.99/mo.
             </div>
           </div>
-          <span className="chip shrink-0">Go Plus</span>
-        </Link>
+          <span className="chip shrink-0 !cursor-default" style={{ color: "var(--muted)" }}>
+            Soon
+          </span>
+        </div>
       )}
     </div>
   );

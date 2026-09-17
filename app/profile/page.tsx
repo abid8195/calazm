@@ -171,9 +171,16 @@ export default function ProfilePage() {
                 Cancel Plus
               </button>
             ) : (
-              <button className="btn btn-brand text-sm shrink-0" disabled={busy} onClick={() => switchPlan("plus")}>
-                Plus · $2.99/mo
-              </button>
+              // Billing isn't wired up yet (POST /api/subscriptions is a stub), so the upgrade
+              // is not offered in the UI. The planned price is shown for transparency.
+              <div className="text-right shrink-0">
+                <span className="chip !cursor-default" style={{ color: "var(--muted)" }}>
+                  Plus · coming soon
+                </span>
+                <div className="text-[10px] mt-1" style={{ color: "var(--muted)" }}>
+                  planned $2.99/mo
+                </div>
+              </div>
             )}
           </div>
         </section>

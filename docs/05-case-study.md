@@ -49,4 +49,4 @@ The moat isn't AI food recognition — it's **personal nutrition intelligence**:
 
 ## Architecture at a glance
 
-Next.js 15 (App Router, one deployable) · Prisma (SQLite→Postgres) · provider-abstracted AI (`lib/ai/provider.ts`: Anthropic or offline deterministic fallback) · cookie-session auth · Stripe/RevenueCat-ready subscription gating · Dockerized deploy (Railway/Fly) · e2e suite (40 checks) run against every change.
+Next.js 15 (App Router, one deployable) · Prisma (SQLite→Postgres) · provider-abstracted AI (`lib/ai/provider.ts`: Anthropic or offline deterministic fallback) · cookie-session auth · subscription plan gating (billing itself not yet wired) · Dockerfile for single-host deploy · Vitest unit tests + HTTP integration scripts (32 checks) · CI on every push.
